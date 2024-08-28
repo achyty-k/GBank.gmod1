@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет - Банк</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2>Личный кабинет</h2>
+    <p id="welcome-message"></p>
+    <table id="client-service-table">
+        <tr>
+            <th>Услуга</th>
+            <th>Принтер</th>
+            <th>Баланс</th>
+        </tr>
+        <!-- Данные будут добавляться через JS -->
+    </table>
+    <button id="logout-btn">Выйти</button>
+</body>
+<script>
+    const username = localStorage.getItem('userAuthenticated');
+    if (!username) {
+        location.href = 'login.html';
+    } else {
+        document.getElementById('welcome-message').innerText = 'Добро пожаловать, ' + username + '!';
+    }
+
+    function loadClientServices() {
+        const serviceTable = document.getElementById('client-service-table');
+        const services = JSON.parse(localStorage.getItem(`services_${username}`)) || [];
+
+        if (services.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="3">Нет добавленных услуг</td>';
+            serviceTable.appendChild(row);
+        } else {
+            services.forEach(service => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${service.serviceName}</td>
+                    <td>${service.printer}</td>
+                    <td>${service.balance} руб.</td>
+                `;
+                serviceTable.appendChild(row);
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadClientServices);
+
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        localStorage.removeItem('userAuthenticated');
+        location.href = 'login.html';
+    });
+</script>
+</html>

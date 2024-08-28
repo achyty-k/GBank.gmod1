@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход для администратора - Банк</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2>Вход для администратора</h2>
+    <form id="admin-login-form">
+        <label for="admin-username">Имя администратора:</label>
+        <input type="text" id="admin-username" name="admin-username">
+        <label for="admin-password">Пароль:</label>
+        <input type="password" id="admin-password" name="admin-password">
+        <button type="submit">Войти</button>
+    </form>
+    <p id="error-message" style="color:red;"></p>
+</body>
+<script>
+    document.getElementById('admin-login-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('admin-username').value;
+        const password = document.getElementById('admin-password').value;
+
+        // Новый логин и пароль
+        if (username === 'admin' && password === 'admin') {
+            localStorage.setItem('adminAuthenticated', 'true');
+            location.href = 'admin.html';
+        } else {
+            document.getElementById('error-message').innerText = 'Неправильное имя пользователя или пароль';
+        }
+    });
+</script>
+</html>

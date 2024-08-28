@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Административная панель - Банк</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2>Административная панель</h2>
+    <form id="client-select-form">
+        <label for="client-select">Выберите клиента:</label>
+        <select id="client-select">
+            <!-- Клиенты будут добавляться динамически -->
+        </select>
+        <button type="submit">Выбрать клиента</button>
+    </form>
+
+    <div id="service-management" style="display:none;">
+        <h3>Управление услугами клиента: <span id="selected-client"></span></h3>
+        <form id="service-form">
+            <label for="service-name">Название услуги:</label>
+            <input type="text" id="service-name" name="service-name">
+            <label for="printer-type">Тип принтера:</label>
+            <select id="printer-type">
+                <option value="Базовый">Базовый</option>
+                <option value="Обычный">Обычный</option>
+                <option value="Продвинутый">Продвинутый</option>
+                <option value="Премиум">Премиум</option>
+            </select>
+            <label for="balance">Баланс:</label>
+            <input type="number" id="balance" name="balance">
+            <button type="submit">Добавить услугу</button>
+        </form>
+
+        <h3>Добавленные услуги:</h3>
+        <table id="admin-service-table">
+            <tr>
+                <th>Услуга</th>
+                <th>Принтер</th>
+                <th>Баланс</th>
+                <th>Редактирование</th>
+            </tr>
+            <!-- Данные будут добавляться через JS -->
+        </table>
+    </div>
+    <button id="logout-btn">Выйти</button>
+</body>
+<script src="script.js"></script>
+<script>
+    if (localStorage.getItem('adminAuthenticated') !== 'true') {
+        location.href = 'admin-login.html';
+    }
+
+    function loadClients() {
+        const clientSelect = document.getElementById('client-select');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('user_')) {
+                const username = key.replace('user_', '');
+                const option = document.createElement('option');
+                option.value = username;
+                option.text = username;
+                clientSelect.appendChild(option);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadClients);
+
+    document.getElementById('client-select-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const selectedClient = document.getElementById('client-select').value;
+        document.getElementById('selected-client').innerText = selectedClient;
+        document.getElementById('service-management').style.display = 'block';
+        loadClientServices(selectedClient);
+    });
+
+    function loadClientServices(client) {
+        const serviceTable = document.getElementById('admin-service-table');
+        serviceTable.innerHTML = `
+            <tr>
+                <th>Услуга</th>
+                <th>Принтер</th>
+                <th>Баланс</th>
+                <th>Редактирование</th>
+            </tr>`;
+        const services = JSON.parse(localStorage.getItem(`services_${client}`)) || [];
+
+        services.forEach((service, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${service.serviceName}</td>
+                <td>${service.printer}</td>
+                <td>${service.balance} руб.</td>
+                <td>
+                    <button onclick="editService('${client}', ${index})">Изменить</button>
+                    <button onclick="removeService('${client}', ${index})">Удалить</button>
+                </td>
+            `;
+            serviceTable.appendChild(row);
+        });
+    }
+
+    document.getElementById('service-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const client = document.getElementById('selected-client').innerText;
+        const serviceName = document.getElementById('service-name').value;
+        const printerType = document.getElementById('printer-type').value;
+        const balance = document.getElementById('balance').value;
+
+        const serviceData = {
+            serviceName,
+            printer: printerType,
+            balance
+        };
+
+        let clientServices = JSON.parse(localStorage.getItem(`services_${client}`)) || [];
+        clientServices.push(serviceData);
+        localStorage.setItem(`services_${client}`, JSON.stringify(clientServices));
+
+        alert(`Услуга для клиента ${client} добавлена успешно!`);
+        loadClientServices(client);
+    });
+
+    function editService(client, index) {
+        const serviceName = prompt("Введите новое название услуги:");
+        const printerType = prompt("Введите новый тип принтера (Базовый, Обычный, Продвинутый, Премиум):");
+        const balance = prompt("Введите новый баланс:");
+
+        let clientServices = JSON.parse(localStorage.getItem(`services_${client}`));
+        if (serviceName !== null && printerType !== null && balance !== null) {
+            clientServices[index] = {
+                serviceName,
+                printer: printerType,
+                balance
+            };
+            localStorage.setItem(`services_${client}`, JSON.stringify(clientServices));
+            loadClientServices(client);
+        }
+    }
+
+    function removeService(client, index) {
+        let clientServices = JSON.parse(localStorage.getItem(`services_${client}`));
+        clientServices.splice(index, 1);
+        localStorage.setItem(`services_${client}`, JSON.stringify(clientServices));
+        loadClientServices(client);
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        localStorage.removeItem('adminAuthenticated');
+        location.href = 'admin-login.html';
+    });
+</script>
+</html>
